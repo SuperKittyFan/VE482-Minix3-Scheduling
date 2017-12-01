@@ -11,6 +11,9 @@
 #include "schedproc.h"
 #include <assert.h>
 #include <minix/com.h>
+#include <minix/syslib.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <machine/archtypes.h>
 #include "kernel/proc.h" /* for queue constants */
 
