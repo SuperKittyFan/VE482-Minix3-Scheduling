@@ -272,6 +272,7 @@ int do_start_scheduling(message *m_ptr)
  *===========================================================================*/
 int do_nice(message *m_ptr)
 {
+	printf("do_nice...\n");
 	struct schedproc *rmp;
 	int rv;
 	int proc_nr_n;
@@ -302,8 +303,7 @@ int do_nice(message *m_ptr)
 	/* Update the proc entry and reschedule the process */
 	rmp->priority = USER_Q;
 	rmp->tickNum = rmp->tickNum+10*(8-new_q);
-	for (int i=0;i<10;i=i+1)
-		printf("ticketNum: ******************* %d *****************\n", rmp->tickNum);
+	printf("ticketNum: ******************* %d *****************\n", rmp->tickNum);
 	if((int)rmp->tickNum < 10){
 		rmp->tickNum = 10;
 	}
@@ -403,7 +403,6 @@ static void balance_queues(struct timer *tp)
   *				do_lottery				     *
   *===========================================================================*/
 int do_lottery(){
- 	printf("do lottery\n");
  	struct schedproc *rmp;
  	int proc_nr;
  	int pick_num;
@@ -435,7 +434,7 @@ int do_lottery(){
  					rmp->priority = MAX_USER_Q;
  					flag = OK;
  					schedule_process_local(rmp);
- 					printf("winner: process %d in priority %d with ticketNum %d \n", rmp->endpoint,rmp->priority, rmp->tickNum); 
+ 					printf("process %d in priority %d with ticketNum %d \n", rmp->endpoint,rmp->priority, rmp->tickNum); 
  					break;
  				}
  			}
