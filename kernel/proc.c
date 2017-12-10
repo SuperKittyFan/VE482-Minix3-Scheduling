@@ -59,6 +59,7 @@ static int deadlock(int function, register struct proc *caller,
 static int try_async(struct proc *caller_ptr);
 static int try_one(struct proc *src_ptr, struct proc *dst_ptr);
 static struct proc * pick_proc(void);
+static struct proc * pick_proc_ddl(void);
 static void enqueue_head(struct proc *rp);
 
 /* all idles share the same idle_priv structure */
@@ -265,7 +266,7 @@ not_runnable_pick_new:
 	 * timer interrupt the execution resumes here and we can pick another
 	 * process. If there is still nothing runnable we "schedule" IDLE again
 	 */
-	while (!(p = pick_proc())) {
+	while (!(p = pick_proc_ddl())) {
 		idle();
 	}
 
@@ -1709,6 +1710,7 @@ static struct proc * pick_proc(void)
  * This function always uses the run queues of the local cpu!
  */
   register struct proc *rp;			/* process to run */
+  register struct proc *tmp;	
   struct proc **rdy_head;
   int q;				/* iterate over queues */
 
@@ -1722,6 +1724,63 @@ static struct proc * pick_proc(void)
 		TRACE(VF_PICKPROC, printf("cpu %d queue %d empty\n", cpuid, q););
 		continue;
 	}
+	//printf("******************************pick_proc:start******************\n");
+	if (q == 7) {
+		tmp = rp->p_nextready;
+		while (tmp!=NULL){
+			if (tmp->p_deadline.tmr_exp_time>0 
+				&& (rp->p_deadline.tmr_exp_time ==0
+				    || rp->p_deadline.tmr_exp_time>0 && tmp->p_deadline.tmr_exp_time<rp->p_deadline.tmr_exp_time))
+				    rp=tmp;
+			tmp=tmp->p_nextready;
+		}
+	}
+
+	assert(proc_is_runnable(rp));
+	if (priv(rp)->s_flags & BILLABLE)	 	
+		get_cpulocal_var(bill_ptr) = rp; /* bill for system time */
+	return rp;
+  }
+  return NULL;
+}
+
+/*===========================================================================*
+ *				pick_proc_ddl			     * 
+ *===========================================================================*/
+static struct proc * pick_proc_ddl(void)
+{
+/* Decide who to run now.  A new process is selected an returned.
+ * When a billable process is selected, record it in 'bill_ptr', so that the 
+ * clock task can tell who to bill for system time.
+ *
+ * This function always uses the run queues of the local cpu!
+ */
+  register struct proc *rp;			/* process to run */
+	register struct proc *tmp; 
+  struct proc **rdy_head;
+  int q;				/* iterate over queues */
+
+  /* Check each of the scheduling queues for ready processes. The number of
+   * queues is defined in proc.h, and priorities are set in the task table.
+   * If there are no processes ready to run, return NULL.
+   */
+  rdy_head = get_cpulocal_var(run_q_head);
+  for (q=0; q < NR_SCHED_QUEUES; q++) {	
+	if(!(rp = rdy_head[q])) {
+		TRACE(VF_PICKPROC, printf("cpu %d queue %d empty\n", cpuid, q););
+		continue;
+	}
+	if (q == 7) {
+		tmp = rp->p_nextready;
+		while (tmp!=NULL){
+			if (tmp->p_deadline.tmr_exp_time>0 
+				&& (rp->p_deadline.tmr_exp_time ==0
+				    || rp->p_deadline.tmr_exp_time>0 && tmp->p_deadline.tmr_exp_time<rp->p_deadline.tmr_exp_time))
+				    rp=tmp;
+			tmp=tmp->p_nextready;
+		}
+	}
+
 	assert(proc_is_runnable(rp));
 	if (priv(rp)->s_flags & BILLABLE)	 	
 		get_cpulocal_var(bill_ptr) = rp; /* bill for system time */

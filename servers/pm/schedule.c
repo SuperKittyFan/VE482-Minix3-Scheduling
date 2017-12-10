@@ -110,3 +110,22 @@ int sched_nice(struct mproc *rmp, int nice)
 
 	return (OK);
 }
+
+/*===========================================================================*
+ *				do_setdl				     *
+ *===========================================================================*/
+int do_setdl(void){
+	int rv;
+	int deadline;
+	int index; //the index in the process table 
+	deadline=m_in.m1_i1;
+	message m;
+	m.m1_i1=deadline;
+	m.m1_i2=m_in.m1_i2;
+	rv=_kernel_call(SYS_SETDL,&m);
+	return 0;
+}
+
+
+
+

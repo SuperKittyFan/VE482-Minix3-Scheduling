@@ -34,6 +34,7 @@ int wait_test(struct mproc *rmp, struct mproc *child);
 /* getset.c */
 int do_get(void);
 int do_set(void);
+int do_getchpid(void);
 
 /* main.c */
 int main(void);
@@ -61,6 +62,7 @@ int do_getsetpriority(void);
 void sched_init(void);
 int sched_start_user(endpoint_t ep, struct mproc *rmp);
 int sched_nice(struct mproc *rmp, int nice);
+int do_setdl(void);
 
 /* profile.c */
 int do_sprofile(void);

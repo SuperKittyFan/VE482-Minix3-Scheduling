@@ -65,6 +65,8 @@
 #define SETGROUPS_O	  66
 #define GETMCONTEXT       67
 #define SETMCONTEXT       68
+#define SETDL		  69
+#define GET_CHPID 	  70
 
 /* Posix signal handling. */
 #define SIGACTION	  71

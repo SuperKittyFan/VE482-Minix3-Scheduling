@@ -241,3 +241,35 @@ int do_set()
   /* Do not reply until VFS has processed the request */
   return(SUSPEND);
 }
+
+
+/*===========================================================================*
+ *				do_getchpid				     *
+ *===========================================================================*/
+int do_getchpid(void){
+ register struct mproc *rmp = mp;
+ int sum=-1;
+ int c = 0;
+ int n=m_in.m1_i1;
+ printf("Searching for children of process: %d \n", who_p);
+
+ while (c < NR_PROCS)
+  {
+    int m = mproc[c].mp_pid; //First process in the list of availableprocess
+    int pinx = mproc[c].mp_parent; //Index of parent of the current process
+    int ppid = mproc[pinx].mp_pid; //pid of parent process
+    if(who_p == pinx) //If parents pid matches the given value
+    {
+      printf("child finded : %d \n", c); //Print the childs id
+      sum++;
+      if (sum==n) return c;
+      c++;
+    }
+    else
+    {
+      c++;
+    }
+  }
+  return -1;
+}
+

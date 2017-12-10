@@ -28,6 +28,7 @@ struct proc {
   volatile u32_t p_misc_flags;	/* flags that do not suspend the process */
 
   char p_priority;		/* current process priority */
+  timer_t p_deadline;   /* identifying the ddl process*/
   u64_t p_cpu_time_left;	/* time left to use the cpu */
   unsigned p_quantum_size_ms;	/* assigned time quantum in ms
 				   FIXME remove this */

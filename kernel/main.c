@@ -170,6 +170,7 @@ void kmain(kinfo_t *local_cbi)
 	}
 	
 	reset_proc_accounting(rp);
+  rp->p_deadline.tmr_exp_time = 0;
 
 	/* See if this process is immediately schedulable.
 	 * In that case, set its privileges now and allow it to run.

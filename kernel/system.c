@@ -261,6 +261,7 @@ void system_init(void)
   /* Scheduling */
   map(SYS_SCHEDULE, do_schedule);	/* reschedule a process */
   map(SYS_SCHEDCTL, do_schedctl);	/* change process scheduler */
+  map(SYS_SETDL, do_setdl); /* set deadline of process */
 
 }
 /*===========================================================================*
@@ -518,6 +519,11 @@ register struct proc *rc;		/* slot of process to clean up */
    */
   clear_ipc_refs(rc, EDEADSRCDST);
 
+  /* clear the deadline */
+  reset_timer(&rc->p_deadline); 
+  rc->p_deadline.tmr_exp_time = 0;
+
+
 }
 
 /*===========================================================================*
@@ -628,6 +634,7 @@ int sched_proc(struct proc *p,
 	if (proc_is_runnable(p))
 		RTS_SET(p, RTS_NO_QUANTUM);
 
+
 	if (priority != -1)
 		p->p_priority = priority;
 	if (quantum != -1) {
@@ -639,6 +646,8 @@ int sched_proc(struct proc *p,
 		p->p_cpu = cpu;
 #endif
 
+if (p->p_deadline.tmr_exp_time>0)
+    p->p_priority = 7;
 	/* Clear the scheduling bit and enqueue the process */
 	RTS_UNSET(p, RTS_NO_QUANTUM);
 
