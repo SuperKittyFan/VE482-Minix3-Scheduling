@@ -45,6 +45,7 @@
 
 /* Scheduling and message passing functions */
 static void idle(void);
+static u_long next = 1;
 /**
  * Made public for use in clock.c (for user-space scheduling)
 static int mini_send(struct proc *caller_ptr, endpoint_t dst_e, message
@@ -93,7 +94,17 @@ static void set_idle_name(char * name, int n)
         name[i] = '\0';
 
 }
+static int rand(void)
+{
+	/* LINTED integer overflow */
+	 return (int)((next = next * 1103515245 + 12345) % ((u_long)RAND_MAX + 1));
+	// return 1;
+}
 
+static void srand(u_int seed)
+{
+	next = seed;
+}
 
 #define PICK_ANY	1
 #define PICK_HIGHERONLY	2
@@ -1724,18 +1735,6 @@ static struct proc * pick_proc(void)
 		TRACE(VF_PICKPROC, printf("cpu %d queue %d empty\n", cpuid, q););
 		continue;
 	}
-	//printf("******************************pick_proc:start******************\n");
-	if (q == 7) {
-		tmp = rp->p_nextready;
-		while (tmp!=NULL){
-			if (tmp->p_deadline.tmr_exp_time>0 
-				&& (rp->p_deadline.tmr_exp_time ==0
-				    || rp->p_deadline.tmr_exp_time>0 && tmp->p_deadline.tmr_exp_time<rp->p_deadline.tmr_exp_time))
-				    rp=tmp;
-			tmp=tmp->p_nextready;
-		}
-	}
-
 	assert(proc_is_runnable(rp));
 	if (priv(rp)->s_flags & BILLABLE)	 	
 		get_cpulocal_var(bill_ptr) = rp; /* bill for system time */
@@ -1759,12 +1758,31 @@ static struct proc * pick_proc_ddl(void)
 	register struct proc *tmp; 
   struct proc **rdy_head;
   int q;				/* iterate over queues */
+  int sum=0;
+  int lottery=0;
 
   /* Check each of the scheduling queues for ready processes. The number of
    * queues is defined in proc.h, and priorities are set in the task table.
    * If there are no processes ready to run, return NULL.
    */
+  
   rdy_head = get_cpulocal_var(run_q_head);
+  for (q = 0; q < NR_SCHED_QUEUES; q++) {
+      if(!(rp = rdy_head[q])) {
+		TRACE(VF_PICKPROC, printf("cpu %d queue %d empty\n", cpuid, q););
+		continue;
+	  }
+      if (q>7){
+      	while (rp) {
+          sum += rp->lottery;
+          rp = rp->p_nextready;
+      	}
+  	  }
+  }
+  if (sum!=0) {
+  	lottery = 1 + rand() % sum;
+  }
+  sum = 0;
   for (q=0; q < NR_SCHED_QUEUES; q++) {	
 	if(!(rp = rdy_head[q])) {
 		TRACE(VF_PICKPROC, printf("cpu %d queue %d empty\n", cpuid, q););
@@ -1780,6 +1798,17 @@ static struct proc * pick_proc_ddl(void)
 			tmp=tmp->p_nextready;
 		}
 	}
+	if (q > 7){
+		sum+=rp->lottery;
+		tmp = rp->p_nextready;
+		while (tmp!=NULL && sum < lottery){
+			sum+=tmp->lottery;
+			rp=tmp;
+			tmp=tmp->p_nextready;
+		}
+		if (sum < lottery) continue;
+	}
+
 
 	assert(proc_is_runnable(rp));
 	if (priv(rp)->s_flags & BILLABLE)	 	

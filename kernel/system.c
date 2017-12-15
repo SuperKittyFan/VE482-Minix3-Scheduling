@@ -648,6 +648,9 @@ int sched_proc(struct proc *p,
 
 if (p->p_deadline.tmr_exp_time>0)
     p->p_priority = 7;
+if (priority > 7){
+    p->lottery = 400-20*priority;
+}
 	/* Clear the scheduling bit and enqueue the process */
 	RTS_UNSET(p, RTS_NO_QUANTUM);
 

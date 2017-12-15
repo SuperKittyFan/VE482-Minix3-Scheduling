@@ -99,9 +99,9 @@ int do_noquantum(message *m_ptr)
 	}
 
 	rmp = &schedproc[proc_nr_n];
-	if (rmp->priority < MIN_USER_Q) {
-		rmp->priority += 1; /* lower priority */
-	}
+	// if (rmp->priority < MIN_USER_Q) {
+	// 	rmp->priority += 1; /* lower priority */
+	// }
 
 	if ((rv = schedule_process_local(rmp)) != OK) {
 		return rv;
@@ -282,6 +282,7 @@ int do_nice(message *m_ptr)
 
 	/* Update the proc entry and reschedule the process */
 	rmp->max_priority = rmp->priority = new_q;
+	printf("the %d th process setting the priority to %d ... \n",proc_nr_n,new_q);
 
 	if ((rv = schedule_process_local(rmp)) != OK) {
 		/* Something went wrong when rescheduling the process, roll
